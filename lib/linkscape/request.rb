@@ -8,7 +8,7 @@ module Linkscape
     # require 'rubygems'
     # require 'hmac-sha1'
 
-    attr_accessor :requestURL
+    attr_accessor :requestURL, :proxy
 
     URL_TEMPLATE = %Q[http://:apiHost:/:apiRoot:/:api:/:url:?AccessID=:accessID:&Expires=:expiration:&Signature=:signature:]
     MAX_URL_LENGTH = 500
@@ -22,7 +22,6 @@ module Linkscape
     end
 
     def initialize(options)
-
       new_vals = {}
       if options[:url]
         case options[:url]
@@ -52,6 +51,8 @@ module Linkscape
       [:AnchorPhraseRid, :AnchorTermRid, :SourceDomain].each do |key|
         @requestURL += "&#{key}=#{options[key]}" if options[key]
       end
+      
+      @proxy = options[:proxy]
     end
 
     def run
@@ -81,8 +82,9 @@ module Linkscape
 
       # Fetch with a POST of thers is a body
       conn = Faraday.new(:url => uri) do |f|
-        f.use FaradayMiddleware::FollowRedirects, :limit => limit
-        f.adapter Faraday.default_adapter
+        f.use       FaradayMiddleware::FollowRedirects, :limit => limit
+        f.proxy     @proxy unless @proxy.empty?
+        f.adapter   Faraday.default_adapter
       end
       response = if @body
         conn.post do |req|
@@ -100,7 +102,7 @@ module Linkscape
         raise Linkscape::HTTPStatusError, response.inspect
       end
 
-    rescue Timeout::Error, Timeout::ExitException => e
+    rescue Timeout::Error => e
       raise Linkscape::TimeoutError, error_msg(e)
     rescue ::EOFError => e
       raise Linkscape::EOFError, error_msg(e)
