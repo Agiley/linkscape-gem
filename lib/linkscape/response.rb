@@ -123,7 +123,7 @@ module Linkscape
       @request = request
       @response = response
       if response.success?
-        @data = ResponseData.new(JSON.parse(response.body))
+        @data = ResponseData.new(response.body)
         @valid = true
       end
     end
@@ -132,9 +132,9 @@ module Linkscape
 
     def valid?; valid; end
 
-    def inspect
-      #<Linkscape::Response:0x10161d8a0 @response=#<Net::HTTPUnauthorized 401 Unauthorized readbody=true>>
-      %Q[#<#{self.class} @response.status=#{@response.status} @request="#{@request.requestURL}">]
-    end
+    #def inspect
+    #  #<Linkscape::Response:0x10161d8a0 @response=#<Net::HTTPUnauthorized 401 Unauthorized readbody=true>>
+    #  %Q[#<#{self.class} @response.status=#{@response.status} @request="#{@request.requestURL}">]
+    #end
   end
 end

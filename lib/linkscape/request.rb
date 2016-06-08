@@ -83,6 +83,8 @@ module Linkscape
       # Fetch with a POST of thers is a body
       conn = Faraday.new(:url => uri) do |f|
         f.use       FaradayMiddleware::FollowRedirects, :limit => limit
+        f.response  :json
+        #f.response  :logger
         f.proxy     @proxy unless @proxy.empty?
         f.adapter   Faraday.default_adapter
       end
