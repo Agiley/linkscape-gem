@@ -101,7 +101,11 @@ module Linkscape
       elsif (500..599).include?(response.status)
         raise Linkscape::InternalServerError, response.inspect
       else
-        raise Linkscape::HTTPStatusError, response.inspect
+        if response.body.fetch("error_message", "") =~ /This account has been banned/i
+          raise Linkscape::BannedAccountError, response.body.fetch("error_message", "")
+        else
+          raise Linkscape::HTTPStatusError, response.inspect
+        end
       end
 
     rescue Timeout::Error => e
