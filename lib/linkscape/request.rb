@@ -106,6 +106,8 @@ module Linkscape
       else
         if response.body.fetch("error_message", "") =~ /This account has been banned/i
           raise Linkscape::BannedAccountError, response.body.fetch("error_message", "")
+        elsif response.body.fetch("error_message", "") =~ /This request exceeds the limit/i
+          raise Linkscape::ThrottledError, response.body.fetch("error_message", "")
         else
           raise Linkscape::HTTPStatusError, response.inspect
         end

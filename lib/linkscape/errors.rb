@@ -9,6 +9,7 @@ module Linkscape
   class RecursionError < Error; end
   
   class BannedAccountError < Error; end
+  class ThrottledError < Error; end
 end
 
 class AuthenticationError < StandardError; end
