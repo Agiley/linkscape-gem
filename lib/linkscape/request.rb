@@ -8,7 +8,7 @@ module Linkscape
     # require 'rubygems'
     # require 'hmac-sha1'
 
-    attr_accessor :requestURL, :proxy
+    attr_accessor :requestURL, :options
 
     URL_TEMPLATE = %Q[http://:apiHost:/:apiRoot:/:api:/:url:?AccessID=:accessID:&Expires=:expiration:&Signature=:signature:]
     MAX_URL_LENGTH = 500
@@ -22,6 +22,8 @@ module Linkscape
     end
 
     def initialize(options)
+      @options = options
+      
       new_vals = {}
       if options[:url]
         case options[:url]
@@ -51,8 +53,6 @@ module Linkscape
       [:AnchorPhraseRid, :AnchorTermRid, :SourceDomain].each do |key|
         @requestURL += "&#{key}=#{options[key]}" if options[key]
       end
-      
-      @proxy = options[:proxy]
     end
 
     def run
@@ -81,11 +81,14 @@ module Linkscape
       raise Linkscape::RecursionError, 'HTTP redirect too deep' if limit == 0
 
       # Fetch with a POST of thers is a body
-      conn = Faraday.new(:url => uri) do |f|
-        f.use       FaradayMiddleware::FollowRedirects, :limit => limit
+      conn = Faraday.new(url: uri) do |f|
+        f.headers[:user_agent]      =   @options[:user_agent] if @options[:user_agent] && !@options[:user_agent].empty?
+        f.use       FaradayMiddleware::FollowRedirects, limit: limit
+        
         f.response  :json
-        #f.response  :logger
-        f.proxy     @proxy unless @proxy.empty?
+        f.response  :logger if @options[:enable_logger]
+        
+        f.proxy     @options[:proxy] if @options[:proxy] && !@options[:proxy].empty?
         f.adapter   Faraday.default_adapter
       end
       response = if @body
